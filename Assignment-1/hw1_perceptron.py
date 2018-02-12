@@ -49,6 +49,12 @@ class Perceptron:
         
         nb_train = x_bias.shape[0]
         
+        # normalize x
+        a = np.linalg.norm(x_bias,axis=1)
+        x_bias_nml = x_bias/a.reshape(a.shape[0],1)
+        
+        # change all NaN value into 0
+        x_bias_nml[np.isnan(x_bias_nml)] = 0
         
         # only update weights if the sample point makes a mistake
         # update rule is w <- w + yi*xi, xi is normalized
@@ -58,7 +64,7 @@ class Perceptron:
         for n in range(0,self.max_iteration):
             for i in range(0,nb_train):
                 # xi must be normalized, xi shape(nb.features+1, )
-                xi = x_bias[i]
+                xi = x_bias_nml[i]
                 yi = y[i]
                 mistake = yi * np.dot(self.w,xi)
             
@@ -69,7 +75,7 @@ class Perceptron:
         # mis is number of mislabelled samples
         mislabel = 0 
         for j in range(0,nb_train):
-            xj = x_bias[j]
+            xj = x_bias_nml[j]
             yj = y[j]
             prod = yj * np.dot(self.w,xj)
             
