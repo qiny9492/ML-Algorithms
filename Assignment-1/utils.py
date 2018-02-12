@@ -105,7 +105,7 @@ def gaussian_kernel_distance(
     x = np.array(point1)
     y = np.array(point2)
     x_minus_y_sqrt = (np.linalg.norm(x-y))**2
-    dis = np.exp(-0.5*(x_minus_y_sqrt))
+    dis = (-1) * np.exp(-0.5*(x_minus_y_sqrt))
     
     return dis
     
