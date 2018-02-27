@@ -46,6 +46,32 @@ def binary_train(X, y, w0=None, b0=None, step_size=0.5, max_iterations=1000):
     """
     TODO: add your code here
     """
+    # use batch gradient descent to find w and b
+    # update rule is
+    # w <- w - step * dw
+    # b <- b - step * db
+    # compute sigmoid function
+    # compute a = w^T * x + b
+    # h is our predict value, y is real value
+    # h shape is (N,)
+    # y shape is (N,)
+    # b_vector size is (N,)
+    
+    for i in range(0,max_iterations):
+        b_vector = np.full((N,),b)
+        a = np.dot(X,w) + b_vector
+        h = sigmoid(a)
+    
+        # gradient of b is db = 1/N * sum(h-y)
+        # gradient of w is dw = 1/N * x * (h-y)^T
+        db = (np.sum(h-y)) / N
+        dw = (np.dot((h-y),X)) / N
+        
+        # use update rule to update w and b
+        w = w - step_size * dw
+        b = b - step_size * db
+    
+    
 
     assert w.shape == (D,)
     return w, b
@@ -67,6 +93,19 @@ def binary_predict(X, w, b):
     """
     TODO: add your code here
     """      
+    
+    # compute sigmoid function
+    b_vector = np.full((N,),b)
+    a = np.dot(X,w) + b_vector
+    h = sigmoid(a)
+    
+    # h < 0.5 , pred = 0
+    # h >= 0.5, pred = 1
+    temp = np.around(h)
+    preds = temp.astype(int)
+    
+    
+    
     assert preds.shape == (N,) 
     return preds
 
@@ -113,11 +152,71 @@ def multinomial_train(X, y, C,
     """
     TODO: add your code here
     """
+    # Step 1 Compute softmax function
+    # In softmax function, w has bias, x has 1
+    # i.e. we use w_bias and x_bias
+    b_2D = b.reshape((C,1))
+    w_bias = np.hstack((b_2D,w))
+    
+    all_one = np.ones((N,1))
+    x_bias = np.hstack((all_one,X))
+    
+    #print(x_bias.shape)
+    min_num = min(N,max_iterations)
+    
+    #print(min_num)
+    
+    for i in range(0,min_num):
+        # for a single training point
+        xi_bias = x_bias[i]
+        class_index = y[i]
+        
+        # from given class number to a K-dimensional vector using 1-of-K encoding
+        yi = np.zeros(C)
+        yi[class_index] = 1
+        
+        # compute softmax function
+        # compute sum(exp(w1*x)+...+exp(wK*x))
+        
+        exp_sum = 0
+        prod = np.zeros(C)
+        
+        
+        
+        for j in range(0,C):
+            wj_bias = w_bias[j]
+            # use prod_bar = prod - max(prod) instead of prod for the softmax function
+            #prod[j] = np.dot(wj_bias,xi_bias) - np.amax(np.dot(wj_bias,xi_bias))
+            prod[j] = np.dot(wj_bias,xi_bias)
+            
+            exp_sum += np.exp(prod[j])
+        
+        soft = (np.exp(prod)) / exp_sum
+        
+        # Compute gradient
+        # gradient = (softmax - yn)*xn
+        # soft, yi, xi are all 1-D, need to reshape
+        # gradient shape (C,D+1)
+        err = soft - yi
+        gradient = np.dot(err[:,None],xi_bias[None,:])
+        
+        # update rule
+        w_bias = w_bias - step_size * gradient
+        
+        
+
+        
+    # first column of w_bias is b
+    # the rest columns is w
+    b = w_bias[:,0]
+    w = w_bias[:,1:]
 
     assert w.shape == (C, D)
     assert b.shape == (C,)
     return w, b
 
+
+    
 
 def multinomial_predict(X, w, b):
     """
@@ -141,6 +240,16 @@ def multinomial_predict(X, w, b):
     """
     TODO: add your code here
     """   
+    # For each test point, compute wk*xn for each class 
+    # b_mtx shape is (N,C)
+    # h = wk^t * x + b for each class
+    # label k = argmax h
+    b_mtx = np.tile(b,(N,1))
+    w_t = np.transpose(w)
+    h = np.dot(X,w_t) + b_mtx
+    preds = h.argmax(axis=1)
+
+
 
     assert preds.shape == (N,)
     return preds
@@ -180,6 +289,21 @@ def OVR_train(X, y, C, w0=None, b0=None, step_size=0.5, max_iterations=1000):
     """
     TODO: add your code here
     """
+    
+    # For each class, we train a classifier
+    # For a classifier to classify No.K class
+    # Change the real label into binary label
+    # If label != K, let label = 0
+    # Else label = 1
+    for i in range(0,C):
+        label = np.copy(y)
+        label[label != i] = -1
+        label[label == i] = 1
+        label[label == -1] = 0
+        w[i], b[i] = binary_train(X,label)
+
+
+    
     assert w.shape == (C, D), 'wrong shape of weights matrix'
     assert b.shape == (C,), 'wrong shape of bias terms vector'
     return w, b
@@ -208,7 +332,18 @@ def OVR_predict(X, w, b):
     """
     TODO: add your code here
     """
-
+    # For each test point, compute sigmoid function for each class 
+    # b_mtx shape is (N,C)
+    # a = w^t * x + b
+    # preds = max h(a) for each test point
+    b_mtx = np.tile(b,(N,1))
+    w_t = np.transpose(w)
+    a = np.dot(X,w_t) + b_mtx
+    h = sigmoid(a)
+    preds = h.argmax(axis=1)
+    
+    
+    
     assert preds.shape == (N,)
     return preds
 
