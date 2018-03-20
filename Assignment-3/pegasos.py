@@ -15,8 +15,33 @@ def objective_function(X, y, w, lamb):
     - train_obj: the value of objective function in SVM primal formulation
     """
     # you need to fill in your solution here
+    
+    # X and w have already included the bias term.
+    N, D = X.shape
+    w_1d = np.reshape(w,(D,))
+    
+    
+    # first_term is a scalar
+    # b shape is (N,1)
+    w_norm = np.linalg.norm(w_1d)
+    first_term = (lamb / 2) * (w_norm ** 2)
 
-
+    
+    
+    a = np.dot(X,w_1d)
+    b = 1 - np.multiply(y,a)
+    
+    b = np.reshape(b,(N,1))
+    all_zeros = np.zeros((N,1))
+    # comp_mtx shape is (N,2)
+    # max_mtx shape is (N,)
+    # second_term is a scalar
+    comp_mtx = np.hstack((all_zeros,b))
+    max_mtx = np.amax(comp_mtx, axis=1)
+    second_term = (np.sum(max_mtx)) / N
+    
+    #obj_value = np.amin(first_term + second_term)
+    obj_value = first_term + second_term
     return obj_value
 
 
@@ -33,22 +58,60 @@ def pegasos_train(Xtrain, ytrain, w, lamb, k, max_iterations):
 
     Returns:
     - learnt w
-    - traiin_obj: a list of the objective function value at each iteration during the training process, length of 500.
+    - train_obj: a list of the objective function value at each iteration during the training process, length of 500.
     """
     np.random.seed(0)
     Xtrain = np.array(Xtrain)
     ytrain = np.array(ytrain)
     N = Xtrain.shape[0]
     D = Xtrain.shape[1]
-
+    w_t = np.reshape(w,(D,))
     train_obj = []
 
     for iter in range(1, max_iterations + 1):
         A_t = np.floor(np.random.rand(k) * N).astype(int)  # index of the current mini-batch
 
         # you need to fill in your solution here
-
-
+        x = Xtrain[A_t]
+        y = ytrain[A_t]
+        
+        
+        
+        a = np.dot(x,w_t)
+        product = np.multiply(y,a)
+        
+        # set A_t_plus
+        x_plus = x[product<1]
+        y_plus = y[product<1]
+        
+        # set learning rate
+        eta = 1 / (lamb * iter)
+        
+        # set w_t_plushalf
+        first_term = (1 - eta * lamb) * w_t
+        
+        num = x_plus.shape[0]
+        sum_prod = 0
+        for i in range(0,num):
+            sum_prod = sum_prod + y_plus[i] * x_plus[i]
+        
+        second_term = sum_prod * eta / k
+        w_t_plushalf = first_term + second_term
+        
+        # set w_t_plusone
+        w_norm = np.linalg.norm(w_t_plushalf)  
+        second = (1 / (lamb ** 0.5)) / w_norm
+        
+        w_t_plusone = min(1,second) * w_t_plushalf
+        
+        # update the weight
+        w_t = w_t_plusone
+        
+        # calculate objective function value
+        obj_value = objective_function(Xtrain, ytrain, w_t, lamb)
+        train_obj.append(obj_value)
+        
+    w = np.reshape(w_t,(D,1))
     return w, train_obj
 
 
@@ -65,8 +128,21 @@ def pegasos_test(Xtest, ytest, w, t = 0.):
     - test_acc: testing accuracy.
     """
     # you need to fill in your solution here
-
-
+    x = np.array(Xtest)
+    y = np.array(ytest)
+    N, D = x.shape
+    w_1d = np.reshape(w,(D,))
+    
+    # pred shape is (N,)
+    # y shape is (N,)
+    pred = np.dot(x,w_1d)
+    pred[pred < t] = -1
+    pred[pred >= t] = 1
+    comp = np.multiply(y,pred)
+    pos = np.count_nonzero(comp == 1)
+    neg = np.count_nonzero(comp == -1)
+    test_acc = pos / (pos + neg)
+    
     return test_acc
 
 
