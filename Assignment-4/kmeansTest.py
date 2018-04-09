@@ -8,6 +8,7 @@ from utils import Figure
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+#import PIL
 
 
 def transform_image(image, code_vectors):
@@ -31,8 +32,44 @@ def transform_image(image, code_vectors):
     # - implement the function
 
     # DONOT CHANGE CODE ABOVE THIS LINE
-    raise Exception(
-        'Implement transform_image function (filename:kmeansTest.py')
+    
+    # image shape is (M,N,3)
+    # code_vectors shape is (K,3)
+    K = code_vectors.shape[0]
+    M = image.shape[0]
+    N = image.shape[1]
+    
+    # miu_i shape is (3,)
+    # miu_i_3d shape is (M,N,3)
+    miu_i = code_vectors[0]
+    miu_i_3d = np.tile(miu_i,(M,N,1))
+    # norm_2d shape is (M,N)
+    norm_3d = np.linalg.norm((miu_i_3d - image),axis=2)
+    
+    
+    for i in range(1,K):
+        # miu_i shape is (3,)
+        # miu_i_3d shape is (M,N,3)
+        miu_i = code_vectors[i]
+        miu_i_3d = np.tile(miu_i,(M,N,1))
+        # norm_2d shape is (M,N)
+        norm_2d = np.linalg.norm((miu_i_3d - image),axis=2)
+        # norm_3d shape will be (M,N,K)
+        norm_3d = np.dstack((norm_3d,norm_2d))
+        
+    # membership shape is (M,N)
+    membership = np.argmin(norm_3d,axis=2)
+    
+    new_image = np.zeros((M,N,3))
+    
+    # replace each pixel with its closest code_vector
+    for j in range(K):
+        new_image[membership == j] = code_vectors[j]
+    
+    return new_image
+    
+#    raise Exception(
+#        'Implement transform_image function (filename:kmeansTest.py')
     # DONOT CHANGE CODE BELOW THIS LINE
 
 

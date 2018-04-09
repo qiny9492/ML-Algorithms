@@ -41,6 +41,7 @@ init = ['k_means', 'random']
 
 for i in init:
     n_cluster = 4
+    print(i)
     gmm = GMM(n_cluster=n_cluster, max_iter=1000, init=i, e=1e-6)
     iterations = gmm.fit(x)
     ll = gmm.compute_log_likelihood(x)

@@ -37,8 +37,101 @@ class KMeans():
         # - return (means, membership, number_of_updates)
 
         # DONOT CHANGE CODE ABOVE THIS LINE
-        raise Exception(
-            'Implement fit function in KMeans class (filename: kmeans.py')
+        
+        # Initialize miu
+        # rand_k shape is (K,)
+        # miu shape is (K,D)
+        rand_k = np.random.choice(N, self.n_cluster, replace=False)
+        miu = x[rand_k]
+        
+        
+        
+        # miu_3d shape is (K,D,N)
+        # x_3d shape is (N,D,K)
+        miu_3d = np.dstack([miu]*N)
+        x_3d = np.dstack([x]*self.n_cluster)
+        
+        # both miu_3d_t and x_3d_t shape are (N,K,D)
+        miu_3d_t = np.transpose(miu_3d,(2,0,1))
+        x_3d_t = np.transpose(x_3d,(0,2,1))
+        
+        # norm_mtx shape is (N,K)
+        norm_mtx = np.linalg.norm((miu_3d_t - x_3d_t),axis=2)
+        dist_mtx = np.square(norm_mtx)
+        
+        # find min of each row, and store the position of these min values
+        row = np.arange(N)
+        col = np.argmin(dist_mtx,axis=1)
+        
+        # r_mtx shape is (N,K)
+        r_mtx = np.zeros((N,self.n_cluster))
+        r_mtx[row,col] = 1
+        
+        j_old = np.sum(np.multiply(r_mtx,dist_mtx)) / N
+        
+        # compute miu_k
+        # r_sum shape is (K,)
+        # r_x_sum shape is (K,D)
+        r_sum = np.sum(r_mtx,axis=0)
+        r_mtx_t = np.transpose(r_mtx)
+        r_x_sum = np.dot(r_mtx_t,x)
+        
+        # r_sum_mtx shape is (K,D)
+        r_sum_mtx = np.transpose(np.tile(r_sum,(D,1)))
+        # miu shape is (K,D)
+        miu = np.divide(r_x_sum,r_sum_mtx)
+        
+        number_of_updates = 1
+        
+        for i in range(self.max_iter):
+            # miu_3d shape is (K,D,N)
+            miu_3d = np.dstack([miu]*N)
+            # both miu_3d_t and x_3d_t shape are (N,K,D)
+            miu_3d_t = np.transpose(miu_3d,(2,0,1))
+            # norm_mtx shape is (N,K)
+            norm_mtx = np.linalg.norm((miu_3d_t - x_3d_t),axis=2)
+            dist_mtx = np.square(norm_mtx)
+            # find min of each row, and store the position of these min values
+            row = np.arange(N)
+            col = np.argmin(dist_mtx,axis=1)
+            # r_mtx shape is (N,K)
+            r_mtx = np.zeros((N,self.n_cluster))
+            r_mtx[row,col] = 1
+            
+            j_new = np.sum(np.multiply(r_mtx,dist_mtx)) / N
+            
+            if abs(j_old - j_new) <= self.e:
+                break
+            
+            j_old = j_new
+            # compute miu_k
+            # r_sum shape is (K,)
+            # r_x_sum shape is (K,D)
+            r_sum = np.sum(r_mtx,axis=0)
+            r_mtx_t = np.transpose(r_mtx)
+            r_x_sum = np.dot(r_mtx_t,x)
+        
+            # r_sum_mtx shape is (K,D)
+            r_sum_mtx = np.transpose(np.tile(r_sum,(D,1)))
+            # miu shape is (K,D)
+            miu = np.divide(r_x_sum,r_sum_mtx)
+            
+            number_of_updates = number_of_updates + 1
+            
+        
+        
+        membership = np.argmax(r_mtx,axis=1)
+        
+        tup = (miu,membership,number_of_updates)
+        
+        return tup
+        
+        
+        
+        
+        
+#        raise Exception(
+#            'Implement fit function in KMeans class (filename: kmeans.py')
         # DONOT CHANGE CODE BELOW THIS LINE
 
 
@@ -84,8 +177,21 @@ class KMeansClassifier():
         # - assign labels to centroid_labels
 
         # DONOT CHANGE CODE ABOVE THIS LINE
-        raise Exception(
-            'Implement fit function in KMeansClassifier class (filename: kmeans.py')
+        
+        k_means = KMeans(self.n_cluster, self.max_iter, self.e)
+        centroids, membership, num = k_means.fit(x)
+        
+        centroid_labels = np.zeros((self.n_cluster,))
+        
+        for i in range(self.n_cluster):
+            y_i = y[membership== i].astype(int)
+            counts = np.bincount(y_i)
+            centroid_labels[i] = np.argmax(counts)
+            
+            
+        
+#        raise Exception(
+#            'Implement fit function in KMeansClassifier class (filename: kmeans.py')
 
         # DONOT CHANGE CODE BELOW THIS LINE
 
@@ -118,6 +224,27 @@ class KMeansClassifier():
         # - return labels
 
         # DONOT CHANGE CODE ABOVE THIS LINE
-        raise Exception(
-            'Implement predict function in KMeansClassifier class (filename: kmeans.py')
+        
+        
+        # centroids_3d shape is (K,D,N)
+        # x_3d shape is (N,D,K)
+        centroids_3d = np.dstack([self.centroids]*N)
+        x_3d = np.dstack([x]*self.n_cluster)
+        
+        # both centroids_3d_t and x_3d_t shape are (N,K,D)
+        centroids_3d_t = np.transpose(centroids_3d,(2,0,1))
+        x_3d_t = np.transpose(x_3d,(0,2,1))
+        
+        # norm_mtx shape is (N,K)
+        norm_mtx = np.linalg.norm((centroids_3d_t - x_3d_t),axis=2)
+        # member shape is (N,), min(member) = 0, max(member) = K-1
+        member = np.argmin(norm_mtx,axis=1) 
+        
+        #pred shape is (N,)
+        pred = self.centroid_labels[member]
+        
+        return pred
+        
+#        raise Exception(
+#            'Implement predict function in KMeansClassifier class (filename: kmeans.py')
         # DONOT CHANGE CODE BELOW THIS LINE
