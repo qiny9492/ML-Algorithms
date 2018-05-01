@@ -22,6 +22,19 @@ def pca(X = np.array([]), no_dims = 50):
 
     """TODO: write your code here"""
     
+    #mean = np.mean(X,axis=0)
+    #x0 = X - mean
+    covar = np.cov(X,rowvar=0)
+    eigenvalues, eigenvectors = np.linalg.eig(covar);
+    
+    # get highest no_dims eigenvalues and eigenvectors
+    idx = eigenvalues.argsort()[::-1][:no_dims]
+    values = eigenvalues[idx]
+    M = eigenvectors[:,idx]
+    Y = np.dot(X,M)
+    
+    
+    
     return Y, M
 
 def decompress(Y = np.array([]), M = np.array([])):
@@ -42,6 +55,7 @@ def decompress(Y = np.array([]), M = np.array([])):
     X_hat = np.array([])
 
     """TODO: write your code here"""
+    X_hat = np.dot(Y,np.transpose(M))
     
     return X_hat
 
@@ -56,6 +70,7 @@ def reconstruction_error(orig = np.array([]), decompressed = np.array([])):
     error = 0
 
     """TODO: write your code here"""
+    error = np.mean(np.square(orig - decompressed))
     
     return error
 

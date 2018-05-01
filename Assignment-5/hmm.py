@@ -22,9 +22,23 @@ def forward(pi, A, B, O):
   ###################################################
   # Q3.1 Edit here
   ###################################################
-
+#  print(O)
+#  print(pi)
+#  print(A)
+#  print(B)
+  # probability of first observation
+  alpha[:,0] = pi * np.transpose(B[:,O[0]])
+  
+  for t in range (1,N):
+      for n in range (0,S):
+          temp = np.dot(alpha[:,t-1],A[:,n]) 
+          alpha[n,t] = temp * B[n,O[t]]
+          
+          
   return alpha
 
+
+  
 
 def backward(pi, A, B, O):
   """
@@ -45,6 +59,11 @@ def backward(pi, A, B, O):
   ###################################################
   # Q3.1 Edit here
   ###################################################
+  beta[:,N-1] = 1
+  
+  for t in reversed(range(N-1)):
+      for n in range(S):
+          beta[n,t] = np.sum(beta[:,t+1] * A[n,:] * B[:,O[t+1]])
   
   return beta
 
@@ -62,6 +81,10 @@ def seqprob_forward(alpha):
   ###################################################
   # Q3.2 Edit here
   ###################################################
+  S, N = alpha.shape
+  
+  for i in range(S):
+      prob = prob + alpha[i,N-1]
   
   return prob
 
@@ -84,6 +107,9 @@ def seqprob_backward(beta, pi, B, O):
   ###################################################
   # Q3.2 Edit here
   ###################################################
+  prob = np.sum(pi * beta[:,0] * B[:,O[0]])
+  
+  
   
   return prob
 
@@ -105,6 +131,23 @@ def viterbi(pi, A, B, O):
   ###################################################
   # Q3.3 Edit here
   ###################################################
+  S = len(pi)
+  N = len(O)
+  p = np.zeros((S, N))
+  
+  
+  
+  p[:,0] = pi * np.transpose(B[:,O[0]])
+  
+  
+  for t in range(1,N):
+      for n in range(S):
+          p[n,t] = np.max(A[:,n] * p[:,t-1] * B[n,O[t]])
+          #print(p[n,t])
+  
+  path_np = np.argmax(p,axis=0)
+  #print(path_np)
+  path = path_np.tolist()
   
   return path
 
