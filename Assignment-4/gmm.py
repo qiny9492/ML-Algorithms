@@ -106,8 +106,7 @@ class GMM():
         num_iter = 0
         
         for j in range(self.max_iter):
-            # calculate number of iterations
-            num_iter = num_iter + 1
+
             #E-step: compute responsibilities
             # p_x_k shape is (K,N)
             p_x_k = np.zeros((self.n_cluster,N))
@@ -187,7 +186,10 @@ class GMM():
             
             # Set l:=l_new
             l = l_new
-                
+            
+            # calculate number of iterations
+            num_iter = num_iter + 1
+
              
 #        print('means: ',self.means)
 #        print('variances: ',self.variances)
